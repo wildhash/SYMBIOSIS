@@ -8,8 +8,8 @@ import type { IAgentConfig, IAgentTask, IAgentResult, ILogger } from '@symbiosis
 import type { EventBus } from '@symbiosis/kernel';
 
 import { BaseAgent } from '../base/agent';
-import { Sandbox, createSandbox } from './sandbox';
-import type { ISandboxConfig } from './sandbox';
+import type { Sandbox, ISandboxConfig } from './sandbox';
+import { createSandbox } from './sandbox';
 
 /**
  * Executor agent configuration

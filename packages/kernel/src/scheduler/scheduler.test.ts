@@ -2,7 +2,7 @@
  * @fileoverview Tests for Scheduler
  */
 
-import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { firstValueFrom, take, toArray } from 'rxjs';
 
 import { Priority, noopLogger } from '@symbiosis/shared';

@@ -8,8 +8,7 @@ import { Subject, ReplaySubject } from 'rxjs';
 import { filter, share, takeUntil } from 'rxjs/operators';
 import type { Observable } from 'rxjs';
 
-import type { ILogger, IEvent, IEventFilter } from '@symbiosis/shared';
-import { EventType } from '@symbiosis/shared';
+import type { ILogger, IEvent, IEventFilter, EventType } from '@symbiosis/shared';
 
 import type { IEventBusConfig } from '../types/kernel';
 

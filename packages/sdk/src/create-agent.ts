@@ -7,8 +7,8 @@ import type { ILogger, IAgentConfig } from '@symbiosis/shared';
 import { AgentType, noopLogger } from '@symbiosis/shared';
 import { EventBus } from '@symbiosis/kernel';
 import type { IEventBusConfig } from '@symbiosis/kernel';
+import type { BaseAgent } from '@symbiosis/agents';
 import {
-  BaseAgent,
   ArchitectAgent,
   CoderAgent,
   ExecutorAgent,
