@@ -9,7 +9,14 @@ SymbiOS is a revolutionary browser-based AI-native operating system that runs en
 ## Key Features
 
 ### 🧠 Distributed LLM Kernel
-- **Multi-LLM Architecture**: Claude, GPT-4, Gemini, and DeepSeek work together as a distributed kernel
+- **Multi-LLM Architecture**: Claude Opus 4.5, ChatGPT 5.2, Gemini 2.0, and DeepSeek V3 work together as a distributed kernel
+- **Latest Models**: Always uses the most recent and capable AI models (updated Jan 2026):
+  - **Claude Opus 4.5**: Best reasoning and coding (99% scores)
+  - **ChatGPT 5.2**: Advanced general-purpose AI with o3 reasoning
+  - **Gemini 2.0 Flash**: Fastest multimodal model with excellent cost efficiency
+  - **DeepSeek V3**: Best coding performance at lowest cost
+- **Model Selection**: Choose specific model versions or auto-upgrade to latest
+- **Zero-Day Updates**: Configuration designed for immediate updates when new models release
 - **Intelligent Routing**: Tasks are automatically routed to the best LLM based on:
   - Capability matching (reasoning, coding, analysis)
   - Cost efficiency
@@ -168,16 +175,73 @@ SYMBIOSIS/
 
 ## Configuration
 
-### LLM Providers
+### Updating AI Models
+
+SymbiOS is designed for **zero-day model updates**. When new AI models are released:
+
+#### Automatic Model Updates (UI)
+1. Navigate to the **Kernel** tab
+2. Click **"Upgrade All"** button when new models are available
+3. Or select specific model versions from the dropdown for each provider
+
+#### Manual Configuration (Code)
+Edit `src/kernel/llm-config.ts`:
+
+```typescript
+// Update AVAILABLE_MODELS with new releases
+export const AVAILABLE_MODELS: Record<LLMProvider, string[]> = {
+  claude: [
+    'claude-opus-4.5',           // Add new models at the top
+    'claude-3-5-sonnet-20241022',
+  ],
+  gpt: [
+    'chatgpt-5.2',               // Latest models first
+    'o3',
+  ],
+  // ... other providers
+};
+
+// Update LLM_CONFIGS to use latest models
+export const LLM_CONFIGS: Record<LLMProvider, LLMConfig> = {
+  claude: {
+    model: 'claude-opus-4.5',    // Set to latest
+    capabilities: {
+      reasoning: 0.99,           // Update capability scores
+      coding: 0.99,
+      // ...
+    },
+    costPerToken: 0.000015       // Update pricing
+  },
+  // ... other providers
+};
+```
+
+#### Current Models (as of Jan 2026)
+- **Claude**: Opus 4.5 (best reasoning & coding)
+- **OpenAI**: ChatGPT 5.2 / o3 (advanced reasoning)
+- **Google**: Gemini 2.0 Flash Exp (fastest multimodal)
+- **DeepSeek**: V3 (best coding at lowest cost)
+
+#### Where to Check for Updates
+- Claude: https://docs.anthropic.com/claude/docs/models-overview
+- OpenAI: https://platform.openai.com/docs/models
+- Google: https://ai.google.dev/models/gemini
+- DeepSeek: https://platform.deepseek.com/docs
+
+### LLM Provider Configuration
 
 Each LLM provider can be configured with:
 - API endpoints
 - API keys
-- Model selection
+- Model selection (runtime switching supported)
 - Capability scores
 - Cost per token
 
-Default configurations are provided, but can be customized via the kernel router.
+```typescript
+// Runtime model switching
+import { setProviderModel } from './kernel/llm-config';
+setProviderModel('claude', 'claude-opus-4.5');
+```
 
 ### Approval Thresholds
 

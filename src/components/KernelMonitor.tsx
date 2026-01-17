@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { kernelRouter } from '../kernel/router';
 import { LLMProvider } from '../kernel/types';
 import { LLM_CONFIGS } from '../kernel/llm-config';
+import { ModelSelector, ModelUpgradePanel } from './ModelSelector';
 import './KernelMonitor.css';
 
 export const KernelMonitor: React.FC = () => {
@@ -37,6 +38,8 @@ export const KernelMonitor: React.FC = () => {
         </div>
       </div>
 
+      <ModelUpgradePanel />
+
       <div className="providers-grid">
         {providers.map(provider => {
           const config = LLM_CONFIGS[provider];
@@ -52,10 +55,7 @@ export const KernelMonitor: React.FC = () => {
               </div>
               
               <div className="provider-info">
-                <div className="info-item">
-                  <span className="label">Model:</span>
-                  <span className="value">{config.model}</span>
-                </div>
+                <ModelSelector provider={provider} />
                 <div className="info-item">
                   <span className="label">Cost/Token:</span>
                   <span className="value">${config.costPerToken.toFixed(8)}</span>
