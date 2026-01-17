@@ -1,0 +1,17 @@
+{
+  "extends": "../../tsconfig.json",
+  "compilerOptions": {
+    "noEmit": true,
+    "jsx": "react-jsx"
+  },
+  "include": ["src/**/*"],
+  "exclude": ["node_modules", "dist"],
+  "references": [
+    { "path": "../../packages/shared" },
+    { "path": "../../packages/kernel" },
+    { "path": "../../packages/agents" },
+    { "path": "../../packages/runtime" },
+    { "path": "../../packages/sdk" },
+    { "path": "../../packages/ui" }
+  ]
+}

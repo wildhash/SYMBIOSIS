@@ -1,0 +1,205 @@
+/**
+ * SymbiOS Web Application Styles
+ */
+
+:root {
+  --color-primary: #00ff88;
+  --color-primary-dim: rgba(0, 255, 136, 0.6);
+  --color-primary-subtle: rgba(0, 255, 136, 0.2);
+  --color-background: #000000;
+  --color-surface: #0a0a0a;
+  --color-surface-elevated: #141414;
+  --color-border: rgba(0, 255, 136, 0.2);
+  --color-text: #ffffff;
+  --color-text-muted: rgba(255, 255, 255, 0.6);
+  --color-text-dim: rgba(255, 255, 255, 0.4);
+  --font-mono: 'JetBrains Mono', 'SF Mono', monospace;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html, body, #root {
+  height: 100%;
+  width: 100%;
+}
+
+body {
+  font-family: var(--font-mono);
+  background-color: var(--color-background);
+  color: var(--color-text);
+  overflow: hidden;
+}
+
+.app {
+  height: 100%;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Boot Screen */
+.boot-screen {
+  height: 100%;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: var(--color-background);
+}
+
+.boot-content {
+  text-align: center;
+}
+
+.boot-title {
+  font-size: 4rem;
+  font-weight: 900;
+  letter-spacing: -0.05em;
+  color: var(--color-primary);
+  margin-bottom: 2rem;
+}
+
+.boot-title-accent {
+  color: var(--color-text);
+}
+
+.boot-progress {
+  width: 300px;
+  height: 4px;
+  background-color: var(--color-surface);
+  border-radius: 2px;
+  overflow: hidden;
+  margin: 0 auto 1rem;
+}
+
+.boot-progress-bar {
+  height: 100%;
+  background-color: var(--color-primary);
+  transition: width 0.1s ease;
+}
+
+.boot-status {
+  font-size: 0.875rem;
+  color: var(--color-primary-dim);
+}
+
+/* Status Bar */
+.status-bar {
+  height: 32px;
+  background-color: rgba(0, 0, 0, 0.8);
+  backdrop-filter: blur(10px);
+  border-bottom: 1px solid var(--color-border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 1rem;
+  font-size: 0.75rem;
+}
+
+.status-bar-left,
+.status-bar-right {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.status-bar-logo {
+  font-weight: 700;
+  color: var(--color-primary);
+}
+
+.status-bar-version {
+  color: var(--color-text-dim);
+}
+
+.status-indicator {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.status-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+}
+
+.status-dot.online {
+  background-color: var(--color-primary);
+}
+
+.status-dot.offline {
+  background-color: #ff4444;
+}
+
+/* Desktop */
+.desktop {
+  flex: 1;
+  position: relative;
+  background-image:
+    linear-gradient(to right, var(--color-border) 1px, transparent 1px),
+    linear-gradient(to bottom, var(--color-border) 1px, transparent 1px);
+  background-size: 40px 40px;
+  overflow: hidden;
+}
+
+.desktop-content {
+  height: 100%;
+  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+/* Welcome Section */
+.welcome-card {
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: 4px;
+  padding: 2rem;
+  max-width: 800px;
+}
+
+.welcome-title {
+  font-size: 1.5rem;
+  margin-bottom: 0.5rem;
+  color: var(--color-primary);
+}
+
+.welcome-description {
+  color: var(--color-text-muted);
+  margin-bottom: 1.5rem;
+}
+
+.features-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1rem;
+}
+
+.feature-card {
+  background-color: var(--color-surface-elevated);
+  padding: 1rem;
+  border-radius: 4px;
+}
+
+.feature-icon {
+  font-size: 1.5rem;
+  margin-bottom: 0.5rem;
+  display: block;
+}
+
+.feature-title {
+  font-size: 0.875rem;
+  font-weight: 600;
+  margin-bottom: 0.25rem;
+}
+
+.feature-text {
+  font-size: 0.75rem;
+  color: var(--color-text-dim);
+}
