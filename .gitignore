@@ -36,6 +36,10 @@ logs/
 .cache/
 .parcel-cache/
 .eslintcache
+.turbo/
+
+# TypeScript
+*.tsbuildinfo
 
 # Temporary files
 tmp/
