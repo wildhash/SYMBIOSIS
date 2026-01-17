@@ -57,7 +57,7 @@ export class CriticAgent implements Agent {
     }
   }
 
-  private reviewCode(code: string): any {
+  private reviewCode(_code: string): any {
     // Code review logic
     return {
       quality: 'good',
@@ -67,7 +67,7 @@ export class CriticAgent implements Agent {
     };
   }
 
-  private identifyIssues(code: string): any[] {
+  private identifyIssues(_code: string): any[] {
     // Issue identification logic
     return [
       {
@@ -79,7 +79,7 @@ export class CriticAgent implements Agent {
     ];
   }
 
-  private provideSuggestions(code: string): string[] {
+  private provideSuggestions(_code: string): string[] {
     // Suggestion logic
     return [
       'Add input validation',
@@ -88,7 +88,7 @@ export class CriticAgent implements Agent {
     ];
   }
 
-  private assessSecurity(code: string): any {
+  private assessSecurity(_code: string): any {
     // Security assessment logic
     return {
       vulnerabilities: [],

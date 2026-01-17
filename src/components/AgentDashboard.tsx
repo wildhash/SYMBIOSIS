@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { agentManager } from '../agents/manager';
 import { AgentTask, AgentResult, AgentType } from '../agents/types';
 import './AgentDashboard.css';

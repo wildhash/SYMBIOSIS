@@ -6,9 +6,7 @@ import './KernelMonitor.css';
 
 export const KernelMonitor: React.FC = () => {
   const [isOffline, setIsOffline] = useState(false);
-  const [providers, setProviders] = useState<LLMProvider[]>([
-    'claude', 'gpt', 'gemini', 'deepseek'
-  ]);
+  const providers: LLMProvider[] = ['claude', 'gpt', 'gemini', 'deepseek'];
 
   useEffect(() => {
     const checkOffline = () => {
@@ -25,7 +23,7 @@ export const KernelMonitor: React.FC = () => {
     };
   }, []);
 
-  const getProviderStatus = (provider: LLMProvider) => {
+  const getProviderStatus = (_provider: LLMProvider) => {
     return isOffline ? 'offline' : 'online';
   };
 

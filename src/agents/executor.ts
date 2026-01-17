@@ -55,7 +55,7 @@ export class ExecutorAgent implements Agent {
     }
   }
 
-  private executeTask(description: string, context: any): string[] {
+  private executeTask(description: string, _context: any): string[] {
     // Task execution logic
     return [
       `Starting execution: ${description}`,
@@ -65,7 +65,7 @@ export class ExecutorAgent implements Agent {
     ];
   }
 
-  private collectArtifacts(context: any): any {
+  private collectArtifacts(_context: any): any {
     // Artifact collection logic
     return {
       logs: [],

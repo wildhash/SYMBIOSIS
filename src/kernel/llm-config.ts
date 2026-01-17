@@ -1,4 +1,4 @@
-import { LLMProvider, LLMConfig, LLMCapability } from './types';
+import { LLMProvider, LLMConfig } from './types';
 
 // Default LLM configurations based on their known capabilities
 export const LLM_CONFIGS: Record<LLMProvider, LLMConfig> = {

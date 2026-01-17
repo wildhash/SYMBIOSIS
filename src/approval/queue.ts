@@ -1,4 +1,4 @@
-import { ApprovalRequest, ApprovalDecision, ApprovalStatus, CriticalityLevel } from './types';
+import { ApprovalRequest, ApprovalDecision, CriticalityLevel } from './types';
 
 /**
  * Approval Queue Manager

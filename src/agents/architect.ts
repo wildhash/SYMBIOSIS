@@ -56,7 +56,7 @@ export class ArchitectAgent implements Agent {
     }
   }
 
-  private planArchitecture(description: string, context: any): any {
+  private planArchitecture(_description: string, _context: any): any {
     // Architecture planning logic
     return {
       approach: 'Modular component-based architecture',
@@ -65,12 +65,12 @@ export class ArchitectAgent implements Agent {
     };
   }
 
-  private identifyComponents(description: string): string[] {
+  private identifyComponents(_description: string): string[] {
     // Component identification logic
     return ['KernelRouter', 'AgentManager', 'ApprovalQueue', 'UILayer'];
   }
 
-  private assessRisks(context: any): string[] {
+  private assessRisks(_context: any): string[] {
     // Risk assessment logic
     return [
       'API rate limits',
