@@ -23,7 +23,7 @@ export const KernelMonitor: React.FC = () => {
     };
   }, []);
 
-  const getProviderStatus = (_provider: LLMProvider) => {
+  const getProviderStatus = () => {
     return isOffline ? 'offline' : 'online';
   };
 
@@ -40,7 +40,7 @@ export const KernelMonitor: React.FC = () => {
       <div className="providers-grid">
         {providers.map(provider => {
           const config = LLM_CONFIGS[provider];
-          const status = getProviderStatus(provider);
+          const status = getProviderStatus();
           
           return (
             <div key={provider} className={`provider-card ${status}`}>

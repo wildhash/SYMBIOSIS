@@ -7,7 +7,7 @@ import { TaskRequirements } from '../kernel/types';
  * Implements features and modifies the OS itself
  */
 export class CoderAgent implements Agent {
-  type: 'coder' = 'coder';
+  type = 'coder' as const;
 
   canHandle(task: AgentTask): boolean {
     return task.type === 'coder';

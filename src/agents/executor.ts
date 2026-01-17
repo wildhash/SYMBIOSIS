@@ -7,7 +7,7 @@ import { TaskRequirements } from '../kernel/types';
  * Runs tasks, builds, tests, and deployments
  */
 export class ExecutorAgent implements Agent {
-  type: 'executor' = 'executor';
+  type = 'executor' as const;
 
   canHandle(task: AgentTask): boolean {
     return task.type === 'executor';
@@ -29,9 +29,9 @@ export class ExecutorAgent implements Agent {
       // Simulate task execution
       const output = {
         provider,
-        executionLog: this.executeTask(task.description, task.context),
+        executionLog: this.executeTask(task.description),
         status: 'completed',
-        artifacts: this.collectArtifacts(task.context)
+        artifacts: this.collectArtifacts()
       };
 
       return {
@@ -55,7 +55,7 @@ export class ExecutorAgent implements Agent {
     }
   }
 
-  private executeTask(description: string, _context: any): string[] {
+  private executeTask(description: string): string[] {
     // Task execution logic
     return [
       `Starting execution: ${description}`,
@@ -65,7 +65,7 @@ export class ExecutorAgent implements Agent {
     ];
   }
 
-  private collectArtifacts(_context: any): any {
+  private collectArtifacts(): any {
     // Artifact collection logic
     return {
       logs: [],

@@ -7,7 +7,7 @@ import { TaskRequirements } from '../kernel/types';
  * Reviews code, identifies issues, and ensures quality
  */
 export class CriticAgent implements Agent {
-  type: 'critic' = 'critic';
+  type = 'critic' as const;
 
   canHandle(task: AgentTask): boolean {
     return task.type === 'critic';
@@ -30,10 +30,10 @@ export class CriticAgent implements Agent {
       // Simulate code review
       const output = {
         provider,
-        review: this.reviewCode(task.context?.code),
-        issues: this.identifyIssues(task.context?.code),
-        suggestions: this.provideSuggestions(task.context?.code),
-        securityAssessment: this.assessSecurity(task.context?.code)
+        review: this.reviewCode(),
+        issues: this.identifyIssues(),
+        suggestions: this.provideSuggestions(),
+        securityAssessment: this.assessSecurity()
       };
 
       return {
@@ -57,7 +57,7 @@ export class CriticAgent implements Agent {
     }
   }
 
-  private reviewCode(_code: string): any {
+  private reviewCode(): any {
     // Code review logic
     return {
       quality: 'good',
@@ -67,7 +67,7 @@ export class CriticAgent implements Agent {
     };
   }
 
-  private identifyIssues(_code: string): any[] {
+  private identifyIssues(): any[] {
     // Issue identification logic
     return [
       {
@@ -79,7 +79,7 @@ export class CriticAgent implements Agent {
     ];
   }
 
-  private provideSuggestions(_code: string): string[] {
+  private provideSuggestions(): string[] {
     // Suggestion logic
     return [
       'Add input validation',
@@ -88,7 +88,7 @@ export class CriticAgent implements Agent {
     ];
   }
 
-  private assessSecurity(_code: string): any {
+  private assessSecurity(): any {
     // Security assessment logic
     return {
       vulnerabilities: [],

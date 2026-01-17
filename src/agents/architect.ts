@@ -7,7 +7,7 @@ import { TaskRequirements } from '../kernel/types';
  * Analyzes requirements and creates system architecture
  */
 export class ArchitectAgent implements Agent {
-  type: 'architect' = 'architect';
+  type = 'architect' as const;
 
   canHandle(task: AgentTask): boolean {
     return task.type === 'architect';
@@ -30,9 +30,9 @@ export class ArchitectAgent implements Agent {
       // Simulate architecture planning
       const output = {
         provider,
-        architecture: this.planArchitecture(task.description, task.context),
-        components: this.identifyComponents(task.description),
-        risks: this.assessRisks(task.context)
+        architecture: this.planArchitecture(),
+        components: this.identifyComponents(),
+        risks: this.assessRisks()
       };
 
       return {
@@ -56,7 +56,7 @@ export class ArchitectAgent implements Agent {
     }
   }
 
-  private planArchitecture(_description: string, _context: any): any {
+  private planArchitecture(): any {
     // Architecture planning logic
     return {
       approach: 'Modular component-based architecture',
@@ -65,12 +65,12 @@ export class ArchitectAgent implements Agent {
     };
   }
 
-  private identifyComponents(_description: string): string[] {
+  private identifyComponents(): string[] {
     // Component identification logic
     return ['KernelRouter', 'AgentManager', 'ApprovalQueue', 'UILayer'];
   }
 
-  private assessRisks(_context: any): string[] {
+  private assessRisks(): string[] {
     // Risk assessment logic
     return [
       'API rate limits',
