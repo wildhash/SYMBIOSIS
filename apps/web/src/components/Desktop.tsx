@@ -2,15 +2,6 @@
  * @fileoverview Desktop component
  */
 
-import type { EventBus } from '@symbiosis/kernel';
-
-/**
- * Desktop props
- */
-interface IDesktopProps {
-  readonly eventBus: EventBus;
-}
-
 /**
  * Feature card data
  */
@@ -49,7 +40,7 @@ const FEATURES: readonly IFeature[] = [
 /**
  * Desktop component
  */
-export function Desktop({ eventBus }: IDesktopProps): JSX.Element {
+export function Desktop(): JSX.Element {
   return (
     <div className="desktop">
       <div className="desktop-content">

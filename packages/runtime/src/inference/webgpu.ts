@@ -4,7 +4,7 @@
  */
 
 import type { Result } from '@symbiosis/shared';
-import { ok, err } from '@symbiosis/shared';
+import { ok } from '@symbiosis/shared';
 
 import type { IInferenceAdapter } from '../types/index';
 import type { IWebGPUConfig } from './types';
@@ -82,8 +82,17 @@ export class WebGPUInference implements IInferenceAdapter {
     // For now, we simulate loading
     await new Promise((resolve) => setTimeout(resolve, 100));
 
+    // Store the model path for future reference
     this.modelPath = modelPath;
     this.isModelLoaded = true;
+  }
+
+  /**
+   * Get the loaded model path
+   * @returns The model path or null if not loaded
+   */
+  public getModelPath(): string | null {
+    return this.modelPath;
   }
 
   /**

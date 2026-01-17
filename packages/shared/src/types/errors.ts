@@ -9,14 +9,13 @@
 export abstract class SymbiosError extends Error {
   public abstract readonly code: string;
   public readonly timestamp: Date;
+  public override readonly cause?: Error | undefined;
 
-  constructor(
-    message: string,
-    public readonly cause?: Error,
-  ) {
+  constructor(message: string, cause?: Error | undefined) {
     super(message);
     this.name = this.constructor.name;
     this.timestamp = new Date();
+    this.cause = cause;
 
     // Maintains proper stack trace for where error was thrown
     if (Error.captureStackTrace !== undefined) {

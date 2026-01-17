@@ -56,8 +56,8 @@ export interface IEvent<T = unknown> {
   readonly source: string;
   readonly timestamp: Date;
   readonly payload: T;
-  readonly correlationId?: string;
-  readonly metadata?: Record<string, unknown>;
+  readonly correlationId?: string | undefined;
+  readonly metadata?: Record<string, unknown> | undefined;
 }
 
 /**

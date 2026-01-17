@@ -82,9 +82,9 @@ export class EventBus {
    */
   public on<T = unknown>(eventFilter?: IEventFilter): Observable<IEvent<T>> {
     return this.eventStream.pipe(
-      filter((event) => this.matchesFilter(event, eventFilter)),
+      filter((event): event is IEvent<T> => this.matchesFilter(event, eventFilter)),
       share(),
-    ) as Observable<IEvent<T>>;
+    );
   }
 
   /**
@@ -94,9 +94,9 @@ export class EventBus {
    */
   public onWithReplay<T = unknown>(eventFilter?: IEventFilter): Observable<IEvent<T>> {
     return this.replayStream.pipe(
-      filter((event) => this.matchesFilter(event, eventFilter)),
+      filter((event): event is IEvent<T> => this.matchesFilter(event, eventFilter)),
       share(),
-    ) as Observable<IEvent<T>>;
+    );
   }
 
   /**

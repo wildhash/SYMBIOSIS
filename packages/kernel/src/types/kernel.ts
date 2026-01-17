@@ -11,7 +11,6 @@ import type {
   Priority,
   TaskCategory,
   ApprovalLevel,
-  ITokenUsage,
   IModelResponse,
 } from '@symbiosis/shared';
 

@@ -3,7 +3,7 @@
  * @module @symbiosis/sdk/hooks/use-kernel
  */
 
-import { useState, useEffect, useCallback, useMemo } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 
 import type { ILogger } from '@symbiosis/shared';
 import { noopLogger } from '@symbiosis/shared';

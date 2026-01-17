@@ -43,9 +43,7 @@ export abstract class BaseAgent {
 
   constructor(config: IAgentConfig, logger: ILogger, eventBus: EventBus) {
     this.config = config;
-    this.logger = logger.child !== undefined
-      ? (logger as { child: (name: string) => ILogger }).child(config.id)
-      : logger;
+    this.logger = logger;
     this.eventBus = eventBus;
     this.lifecycle = new AgentLifecycle(config.id, this.logger);
     this.metricsSubject = new BehaviorSubject<IAgentMetrics>({

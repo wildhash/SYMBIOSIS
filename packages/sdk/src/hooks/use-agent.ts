@@ -5,7 +5,7 @@
 
 import { useState, useCallback } from 'react';
 
-import type { IAgentTask, IAgentResult } from '@symbiosis/shared';
+import type { IAgentTask } from '@symbiosis/shared';
 import { AgentType, Priority } from '@symbiosis/shared';
 import type { BaseAgent } from '@symbiosis/agents';
 

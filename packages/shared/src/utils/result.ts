@@ -16,7 +16,7 @@ export type Result<T, E> = Ok<T, E> | Err<T, E>;
 /**
  * Ok variant of Result
  */
-export interface Ok<T, E> {
+export interface Ok<T, _E = never> {
   readonly ok: true;
   readonly value: T;
   readonly error?: never;
@@ -25,7 +25,7 @@ export interface Ok<T, E> {
 /**
  * Err variant of Result
  */
-export interface Err<T, E> {
+export interface Err<_T = never, E = unknown> {
   readonly ok: false;
   readonly value?: never;
   readonly error: E;

@@ -52,10 +52,8 @@ export class Router {
   private readonly requestStream: Subject<IRoutingRequest>;
   private readonly metricsSubject: BehaviorSubject<IRouterMetrics>;
   private readonly logger: ILogger;
-  private readonly config: IRouterConfig;
 
   constructor(config: IRouterConfig, logger: ILogger) {
-    this.config = config;
     this.logger = logger;
     this.models = new Map(config.models.map((m) => [m.modelId, m]));
     this.modelHealth = new Map(

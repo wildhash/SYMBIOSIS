@@ -3,12 +3,9 @@
  * @module @symbiosis/sdk/types
  */
 
-export type {
-  IAgentConfig,
-  IAgentTask,
-  IAgentResult,
-  ILogger,
-} from '@symbiosis/shared';
+import type { ILogger } from '@symbiosis/shared';
+
+export type { IAgentConfig, IAgentTask, IAgentResult, ILogger } from '@symbiosis/shared';
 
 export type { IRouterConfig, IEventBusConfig } from '@symbiosis/kernel';
 
@@ -16,9 +13,9 @@ export type { IRouterConfig, IEventBusConfig } from '@symbiosis/kernel';
  * SDK initialization options
  */
 export interface ISymbiosisOptions {
-  readonly logger?: ILogger;
-  readonly autoStart?: boolean;
-  readonly debugMode?: boolean;
+  readonly logger?: ILogger | undefined;
+  readonly autoStart?: boolean | undefined;
+  readonly debugMode?: boolean | undefined;
 }
 
 /**

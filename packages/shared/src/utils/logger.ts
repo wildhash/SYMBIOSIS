@@ -35,7 +35,7 @@ export interface ILogEntry {
   readonly message: string;
   readonly timestamp: Date;
   readonly source: string;
-  readonly context?: Record<string, unknown>;
+  readonly context?: Record<string, unknown> | undefined;
 }
 
 /**

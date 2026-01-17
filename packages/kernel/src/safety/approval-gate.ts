@@ -40,9 +40,9 @@ export interface IApprovalRequest {
   readonly createdAt: Date;
   readonly expiresAt: Date;
   status: ApprovalStatus;
-  resolvedAt?: Date;
-  resolvedBy?: string;
-  reason?: string;
+  resolvedAt?: Date | undefined;
+  resolvedBy?: string | undefined;
+  reason?: string | undefined;
 }
 
 /**

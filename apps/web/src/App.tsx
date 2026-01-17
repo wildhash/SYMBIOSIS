@@ -2,24 +2,12 @@
  * @fileoverview Main application component
  */
 
-import { useState, useEffect, useCallback } from 'react';
-
-import { EventType, noopLogger } from '@symbiosis/shared';
-import { EventBus } from '@symbiosis/kernel';
-import type { IEventBusConfig } from '@symbiosis/kernel';
+import { useState, useEffect } from 'react';
 
 import { Desktop } from './components/Desktop';
 import { StatusBar } from './components/StatusBar';
 
 import './globals.css';
-
-/**
- * Event bus configuration
- */
-const eventBusConfig: IEventBusConfig = {
-  replayBufferSize: 100,
-  enableLogging: false,
-};
 
 /**
  * Main application component
@@ -29,19 +17,17 @@ export function App(): JSX.Element {
   const [isOnline, setIsOnline] = useState(
     typeof navigator !== 'undefined' ? navigator.onLine : true,
   );
-  const [eventBus] = useState(() => new EventBus(eventBusConfig, noopLogger));
 
   // Handle boot sequence
   useEffect(() => {
     const bootTimer = setTimeout(() => {
       setIsBooting(false);
-      eventBus.emit(EventType.KERNEL_READY, 'app', { timestamp: Date.now() });
     }, 2000);
 
     return (): void => {
       clearTimeout(bootTimer);
     };
-  }, [eventBus]);
+  }, []);
 
   // Handle online/offline status
   useEffect(() => {
@@ -69,7 +55,7 @@ export function App(): JSX.Element {
       ) : (
         <>
           <StatusBar isOnline={isOnline} />
-          <Desktop eventBus={eventBus} />
+          <Desktop />
         </>
       )}
     </div>

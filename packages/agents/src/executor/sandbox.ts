@@ -65,12 +65,20 @@ export const DEFAULT_SANDBOX_CONFIG: ISandboxConfig = {
  * In production, this would use WebContainers or similar
  */
 export class Sandbox {
-  private readonly config: ISandboxConfig;
+  private readonly timeoutMs: number;
   private isInitialized: boolean;
 
   constructor(config: ISandboxConfig = DEFAULT_SANDBOX_CONFIG) {
-    this.config = config;
+    this.timeoutMs = config.timeoutMs;
     this.isInitialized = false;
+  }
+
+  /**
+   * Get the configured timeout
+   * @returns Timeout in milliseconds
+   */
+  public getTimeoutMs(): number {
+    return this.timeoutMs;
   }
 
   /**

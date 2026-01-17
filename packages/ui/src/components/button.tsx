@@ -3,7 +3,7 @@
  * @module @symbiosis/ui/components/button
  */
 
-import type { ButtonHTMLAttributes, ReactNode } from 'react';
+import type { ButtonHTMLAttributes, ReactNode, CSSProperties } from 'react';
 import { forwardRef } from 'react';
 
 /**
@@ -31,28 +31,28 @@ export interface IButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
 /**
  * Get variant styles
  */
-function getVariantStyles(variant: ButtonVariant): string {
-  const styles: Record<ButtonVariant, string> = {
-    primary: `
-      background-color: var(--color-primary);
-      color: var(--color-background);
-      border: none;
-    `,
-    secondary: `
-      background-color: transparent;
-      color: var(--color-primary);
-      border: 1px solid var(--color-primary);
-    `,
-    ghost: `
-      background-color: transparent;
-      color: var(--color-text);
-      border: none;
-    `,
-    danger: `
-      background-color: var(--color-error);
-      color: var(--color-text);
-      border: none;
-    `,
+function getVariantStyles(variant: ButtonVariant): CSSProperties {
+  const styles: Record<ButtonVariant, CSSProperties> = {
+    primary: {
+      backgroundColor: 'var(--color-primary)',
+      color: 'var(--color-background)',
+      border: 'none',
+    },
+    secondary: {
+      backgroundColor: 'transparent',
+      color: 'var(--color-primary)',
+      border: '1px solid var(--color-primary)',
+    },
+    ghost: {
+      backgroundColor: 'transparent',
+      color: 'var(--color-text)',
+      border: 'none',
+    },
+    danger: {
+      backgroundColor: 'var(--color-error)',
+      color: 'var(--color-text)',
+      border: 'none',
+    },
   };
   return styles[variant];
 }
@@ -60,11 +60,11 @@ function getVariantStyles(variant: ButtonVariant): string {
 /**
  * Get size styles
  */
-function getSizeStyles(size: ButtonSize): string {
-  const styles: Record<ButtonSize, string> = {
-    sm: 'padding: 0.25rem 0.5rem; font-size: 0.75rem;',
-    md: 'padding: 0.5rem 1rem; font-size: 0.875rem;',
-    lg: 'padding: 0.75rem 1.5rem; font-size: 1rem;',
+function getSizeStyles(size: ButtonSize): CSSProperties {
+  const styles: Record<ButtonSize, CSSProperties> = {
+    sm: { padding: '0.25rem 0.5rem', fontSize: '0.75rem' },
+    md: { padding: '0.5rem 1rem', fontSize: '0.875rem' },
+    lg: { padding: '0.75rem 1.5rem', fontSize: '1rem' },
   };
   return styles[size];
 }
@@ -87,60 +87,33 @@ export const Button = forwardRef<HTMLButtonElement, IButtonProps>(
     },
     ref,
   ) {
-    const baseStyles = `
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      gap: 0.5rem;
-      font-family: var(--font-mono);
-      font-weight: 600;
-      cursor: pointer;
-      transition: all var(--transition-fast);
-      border-radius: var(--radius-sm);
-      text-transform: uppercase;
-      letter-spacing: 0.05em;
-    `;
+    const baseStyles: CSSProperties = {
+      display: 'inline-flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      gap: '0.5rem',
+      fontFamily: 'var(--font-mono)',
+      fontWeight: 600,
+      cursor: disabled === true || isLoading ? 'not-allowed' : 'pointer',
+      transition: 'all var(--transition-fast)',
+      borderRadius: 'var(--radius-sm)',
+      textTransform: 'uppercase',
+      letterSpacing: '0.05em',
+      opacity: disabled === true || isLoading ? 0.5 : 1,
+    };
 
-    const disabledStyles = disabled === true || isLoading
-      ? 'opacity: 0.5; cursor: not-allowed;'
-      : '';
-
-    const hoverStyles = disabled !== true && !isLoading
-      ? `
-        &:hover {
-          transform: translateY(-1px);
-          box-shadow: var(--shadow-glow);
-        }
-      `
-      : '';
-
-    const combinedStyles = [
-      baseStyles,
-      getVariantStyles(variant),
-      getSizeStyles(size),
-      disabledStyles,
-    ].join('');
+    const combinedStyles: CSSProperties = {
+      ...baseStyles,
+      ...getVariantStyles(variant),
+      ...getSizeStyles(size),
+      ...style,
+    };
 
     return (
       <button
         ref={ref}
         disabled={disabled === true || isLoading}
-        style={{
-          ...Object.fromEntries(
-            combinedStyles
-              .split(';')
-              .filter(Boolean)
-              .map((s) => {
-                const [key, value] = s.split(':').map((x) => x.trim());
-                return [
-                  key?.replace(/-([a-z])/g, (_, c: string) => c.toUpperCase()) ?? '',
-                  value ?? '',
-                ];
-              })
-              .filter(([k]) => k !== '' && !k.startsWith('&')),
-          ),
-          ...style,
-        }}
+        style={combinedStyles}
         {...props}
       >
         {isLoading ? (
