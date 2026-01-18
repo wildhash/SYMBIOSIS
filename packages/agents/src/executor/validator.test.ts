@@ -11,7 +11,6 @@ import {
   isSupportedLanguage,
   SUPPORTED_LANGUAGES,
   ViolationType,
-  type SupportedLanguage,
 } from './validator';
 
 describe('isSupportedLanguage', () => {

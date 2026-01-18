@@ -6,9 +6,9 @@
 import { BehaviorSubject, interval, takeUntil, Subject, type Observable } from 'rxjs';
 
 /**
- * Token usage statistics
+ * Token usage statistics for resource monitoring
  */
-export interface ITokenUsage {
+export interface ITokenUsageStats {
   readonly totalTokens: number;
   readonly tokensPerMinute: number;
   readonly costCentsPerMinute: number;
@@ -37,7 +37,7 @@ export type AgentStatus = 'running' | 'waiting' | 'stuck';
  */
 export interface IResourceSnapshot {
   readonly timestamp: Date;
-  readonly tokenUsage: ITokenUsage;
+  readonly tokenUsage: ITokenUsageStats;
   readonly activeAgents: readonly IActiveAgent[];
   readonly pendingTasks: number;
   readonly memoryUsageMB: number;

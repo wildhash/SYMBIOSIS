@@ -5,9 +5,9 @@
 
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import {
-  ResourceMonitor,
   createResourceMonitor,
   DEFAULT_RESOURCE_LIMITS,
+  type ResourceMonitor,
   type IResourceLimits,
 } from './resource-monitor';
 
@@ -269,10 +269,11 @@ describe('ResourceMonitor', () => {
       // Agent should be running initially
       expect(limitedMonitor.getActiveAgents()[0].status).toBe('running');
 
-      // Advance past warning threshold (half of stuck threshold)
-      vi.advanceTimersByTime(6000);
+      // Advance past warning threshold (half of stuck threshold = 5000ms)
+      // Plus need to wait for the interval (5000ms) to fire for detection
+      vi.advanceTimersByTime(10000);
 
-      // Agent should be marked as stuck
+      // Agent should be marked as stuck (detected in the interval callback)
       expect(limitedMonitor.getActiveAgents()[0].status).toBe('stuck');
 
       limitedMonitor.destroy();

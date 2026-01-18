@@ -134,6 +134,19 @@ export function validateJavaScript(code: string): IValidationResult {
         }
       },
 
+      // Check for new Function() - dangerous constructor
+      NewExpression(path) {
+        const callee = path.node.callee;
+        if (callee.type === 'Identifier' && callee.name === 'Function') {
+          violations.push({
+            type: ViolationType.DANGEROUS_EVAL,
+            location: getLocation(callee),
+            message: 'new Function() is not allowed',
+            severity: 'error',
+          });
+        }
+      },
+
       // Check for dynamic imports
       Import(path: NodePath<Node>) {
         const parent = path.parent;
@@ -205,6 +218,7 @@ export function validateJavaScript(code: string): IValidationResult {
       AssignmentExpression(path: NodePath<AssignmentExpression>) {
         const left = path.node.left;
         if (left.type === 'MemberExpression') {
+          // Check direct object mutation like `process.env = {}`
           const object = left.object;
           if (object.type === 'Identifier') {
             if (DANGEROUS_GLOBALS.has(object.name)) {
@@ -212,6 +226,19 @@ export function validateJavaScript(code: string): IValidationResult {
                 type: ViolationType.GLOBAL_MUTATION,
                 location: getLocation(object),
                 message: `Mutating global "${object.name}" is not allowed`,
+                severity: 'error',
+              });
+            }
+          }
+
+          // Check nested member expression like `Function.prototype.call = ...`
+          if (object.type === 'MemberExpression' && object.object.type === 'Identifier') {
+            const rootObject = object.object.name;
+            if (DANGEROUS_GLOBALS.has(rootObject)) {
+              violations.push({
+                type: ViolationType.GLOBAL_MUTATION,
+                location: getLocation(object.object),
+                message: `Mutating global "${rootObject}" is not allowed`,
                 severity: 'error',
               });
             }
@@ -260,16 +287,7 @@ function checkIdentifierCall(
     });
   }
 
-  if (callee.name === 'Function' && path.parent.type === 'NewExpression') {
-    violations.push({
-      type: ViolationType.DANGEROUS_EVAL,
-      location: getLocation(callee),
-      message: 'new Function() is not allowed',
-      severity: 'error',
-    });
-  }
-
-  // Also check for Function() call without new
+  // Block both Function() and new Function()
   if (callee.name === 'Function') {
     violations.push({
       type: ViolationType.DANGEROUS_EVAL,

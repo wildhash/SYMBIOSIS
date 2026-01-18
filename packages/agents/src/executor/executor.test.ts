@@ -79,81 +79,9 @@ describe('validateAndSanitizeCode', () => {
     });
   });
 
-  describe('blocked pattern detection', () => {
-    it('should block eval patterns', () => {
-      const result = validateAndSanitizeCode('eval("alert(1)")');
-      expect(result.isValid).toBe(false);
-      expect(result.blockedPatterns.length).toBeGreaterThan(0);
-      expect(result.blockedPatterns.some((p) => p.includes('eval'))).toBe(true);
-      expect(result.sanitizedCode).toContain('/* BLOCKED');
-    });
-
-    it('should block require patterns', () => {
-      const result = validateAndSanitizeCode('const fs = require("fs")');
-      expect(result.isValid).toBe(false);
-      expect(result.blockedPatterns.some((p) => p.includes('require'))).toBe(true);
-    });
-
-    it('should block dynamic import patterns', () => {
-      const result = validateAndSanitizeCode('const mod = await import("./evil")');
-      expect(result.isValid).toBe(false);
-      expect(result.blockedPatterns.some((p) => p.includes('import'))).toBe(true);
-    });
-
-    it('should block Function constructor patterns', () => {
-      const result = validateAndSanitizeCode('new Function("return this")()');
-      expect(result.isValid).toBe(false);
-      expect(result.blockedPatterns.some((p) => p.includes('Function'))).toBe(true);
-    });
-
-    it('should block process access patterns', () => {
-      const result = validateAndSanitizeCode('process.exit(1)');
-      expect(result.isValid).toBe(false);
-      expect(result.blockedPatterns.some((p) => p.includes('process.'))).toBe(true);
-    });
-
-    it('should block __proto__ patterns', () => {
-      const result = validateAndSanitizeCode('obj.__proto__.polluted = true');
-      expect(result.isValid).toBe(false);
-      expect(result.blockedPatterns.some((p) => p.includes('__proto__'))).toBe(true);
-    });
-
-    it('should block child_process patterns', () => {
-      const result = validateAndSanitizeCode('const { exec } = child_process');
-      expect(result.isValid).toBe(false);
-      expect(result.blockedPatterns.some((p) => p.includes('child_process'))).toBe(true);
-    });
-
-    it('should block fs access patterns', () => {
-      const result = validateAndSanitizeCode('fs.readFileSync("/etc/passwd")');
-      expect(result.isValid).toBe(false);
-      expect(result.blockedPatterns.some((p) => p.includes('fs.'))).toBe(true);
-    });
-
-    it('should block exec patterns', () => {
-      const result = validateAndSanitizeCode('exec("rm -rf /")');
-      expect(result.isValid).toBe(false);
-      expect(result.blockedPatterns.some((p) => p.includes('exec'))).toBe(true);
-    });
-
-    it('should block spawn patterns', () => {
-      const result = validateAndSanitizeCode('spawn("sh", ["-c", "malicious"])');
-      expect(result.isValid).toBe(false);
-      expect(result.blockedPatterns.some((p) => p.includes('spawn'))).toBe(true);
-    });
-
-    it('should block constructor bracket access patterns', () => {
-      const result = validateAndSanitizeCode('obj.constructor["prototype"]');
-      expect(result.isValid).toBe(false);
-      expect(result.blockedPatterns.some((p) => p.includes('constructor'))).toBe(true);
-    });
-
-    it('should detect multiple blocked patterns', () => {
-      const result = validateAndSanitizeCode('eval(require("fs").readFileSync("x"))');
-      expect(result.isValid).toBe(false);
-      expect(result.blockedPatterns.length).toBeGreaterThanOrEqual(2);
-    });
-  });
+  // Note: Security validation (blocked patterns) is now handled by the AST-based validator
+  // in validator.ts. The validateAndSanitizeCode function only does basic input validation.
+  // See validator.test.ts for security pattern tests.
 
   describe('valid code acceptance', () => {
     it('should pass valid simple code', () => {
