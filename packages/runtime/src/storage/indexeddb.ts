@@ -11,19 +11,6 @@ import type { IIndexedDBConfig } from './types';
 import { DEFAULT_INDEXEDDB_CONFIG } from './types';
 
 /**
- * Storage error
- */
-export class StorageError extends Error {
-  constructor(
-    message: string,
-    public readonly code: StorageErrorCode,
-  ) {
-    super(message);
-    this.name = 'StorageError';
-  }
-}
-
-/**
  * Storage error codes
  */
 export enum StorageErrorCode {
@@ -32,6 +19,113 @@ export enum StorageErrorCode {
   READ_FAILED = 'READ_FAILED',
   WRITE_FAILED = 'WRITE_FAILED',
   DELETE_FAILED = 'DELETE_FAILED',
+  QUOTA_EXCEEDED = 'QUOTA_EXCEEDED',
+  VERSION_MISMATCH = 'VERSION_MISMATCH',
+  TRANSACTION_FAILED = 'TRANSACTION_FAILED',
+  NOT_FOUND = 'NOT_FOUND',
+  PERMISSION_DENIED = 'PERMISSION_DENIED',
+  BLOCKED = 'BLOCKED',
+  UNKNOWN = 'UNKNOWN',
+}
+
+/**
+ * Storage error with enhanced context
+ */
+export class StorageError extends Error {
+  public readonly code: StorageErrorCode;
+  public readonly originalError: Error | undefined;
+  public readonly context: Record<string, unknown> | undefined;
+
+  constructor(
+    message: string,
+    code: StorageErrorCode,
+    originalError?: Error,
+    context?: Record<string, unknown>,
+  ) {
+    super(message, { cause: originalError });
+    this.name = 'StorageError';
+    this.code = code;
+    this.originalError = originalError;
+    this.context = context;
+
+    // Capture stack trace
+    if (Error.captureStackTrace !== undefined) {
+      Error.captureStackTrace(this, StorageError);
+    }
+  }
+
+  /**
+   * Convert error to JSON for logging
+   */
+  public toJSON(): Record<string, unknown> {
+    return {
+      name: this.name,
+      message: this.message,
+      code: this.code,
+      originalError: this.originalError?.message,
+      context: this.context,
+      stack: this.stack,
+    };
+  }
+}
+
+/**
+ * Extract meaningful error info from DOMException
+ * @param error - The DOMException from IndexedDB
+ * @returns Mapped error message and code
+ */
+function extractIndexedDBError(error: DOMException | null): {
+  message: string;
+  code: StorageErrorCode;
+} {
+  if (error === null) {
+    return {
+      message: 'Unknown IndexedDB error',
+      code: StorageErrorCode.UNKNOWN,
+    };
+  }
+
+  // Map DOMException names to our error codes
+  const errorMap: Record<string, { message: string; code: StorageErrorCode }> = {
+    QuotaExceededError: {
+      message: 'Storage quota exceeded - try clearing some data',
+      code: StorageErrorCode.QUOTA_EXCEEDED,
+    },
+    VersionError: {
+      message: 'Database version mismatch - may need to clear and reload',
+      code: StorageErrorCode.VERSION_MISMATCH,
+    },
+    NotFoundError: {
+      message: 'Database or object store not found',
+      code: StorageErrorCode.NOT_FOUND,
+    },
+    InvalidStateError: {
+      message: 'Database is in invalid state - transaction may have been aborted',
+      code: StorageErrorCode.TRANSACTION_FAILED,
+    },
+    TransactionInactiveError: {
+      message: 'Transaction is no longer active',
+      code: StorageErrorCode.TRANSACTION_FAILED,
+    },
+    AbortError: {
+      message: 'Transaction was aborted',
+      code: StorageErrorCode.TRANSACTION_FAILED,
+    },
+    NotAllowedError: {
+      message: 'Permission denied - user may have blocked storage',
+      code: StorageErrorCode.PERMISSION_DENIED,
+    },
+  };
+
+  const mapped = errorMap[error.name];
+  if (mapped !== undefined) {
+    return mapped;
+  }
+
+  return {
+    message: `IndexedDB error: ${error.name} - ${error.message}`,
+    code: StorageErrorCode.UNKNOWN,
+  };
 }
 
 /**
@@ -52,14 +146,41 @@ export class IndexedDBStorage implements IStorageAdapter {
    */
   public async initialize(): Promise<Result<void, StorageError>> {
     if (typeof indexedDB === 'undefined') {
-      return err(new StorageError('IndexedDB not available', StorageErrorCode.NOT_AVAILABLE));
+      return err(
+        new StorageError('IndexedDB not available', StorageErrorCode.NOT_AVAILABLE, undefined, {
+          databaseName: this.config.databaseName,
+        }),
+      );
     }
 
     return new Promise((resolve) => {
       const request = indexedDB.open(this.config.databaseName, this.config.version);
 
       request.onerror = (): void => {
-        resolve(err(new StorageError('Failed to open database', StorageErrorCode.OPEN_FAILED)));
+        const errorInfo = extractIndexedDBError(request.error);
+        resolve(
+          err(
+            new StorageError(
+              `Failed to open database "${this.config.databaseName}": ${errorInfo.message}`,
+              errorInfo.code,
+              request.error ?? undefined,
+              { databaseName: this.config.databaseName, version: this.config.version },
+            ),
+          ),
+        );
+      };
+
+      request.onblocked = (): void => {
+        resolve(
+          err(
+            new StorageError(
+              `Database "${this.config.databaseName}" is blocked - close other tabs using this database`,
+              StorageErrorCode.BLOCKED,
+              undefined,
+              { databaseName: this.config.databaseName, version: this.config.version },
+            ),
+          ),
+        );
       };
 
       request.onsuccess = (): void => {
@@ -87,22 +208,53 @@ export class IndexedDBStorage implements IStorageAdapter {
     }
 
     return new Promise((resolve, reject) => {
-      const transaction = this.db?.transaction(this.config.storeName, 'readonly');
-      if (transaction === undefined) {
-        resolve(undefined);
-        return;
+      try {
+        const transaction = this.db?.transaction(this.config.storeName, 'readonly');
+        if (transaction === undefined) {
+          resolve(undefined);
+          return;
+        }
+
+        const store = transaction.objectStore(this.config.storeName);
+        const request = store.get(key);
+
+        request.onerror = (): void => {
+          const errorInfo = extractIndexedDBError(request.error);
+          reject(
+            new StorageError(
+              `Failed to read key "${key}": ${errorInfo.message}`,
+              StorageErrorCode.READ_FAILED,
+              request.error ?? undefined,
+              { key, storeName: this.config.storeName },
+            ),
+          );
+        };
+
+        request.onsuccess = (): void => {
+          resolve(request.result as T | undefined);
+        };
+
+        transaction.onerror = (): void => {
+          const errorInfo = extractIndexedDBError(transaction.error);
+          reject(
+            new StorageError(
+              `Transaction failed while reading key "${key}": ${errorInfo.message}`,
+              StorageErrorCode.TRANSACTION_FAILED,
+              transaction.error ?? undefined,
+              { key, storeName: this.config.storeName },
+            ),
+          );
+        };
+      } catch (error) {
+        reject(
+          new StorageError(
+            `Unexpected error reading key "${key}": ${error instanceof Error ? error.message : 'Unknown'}`,
+            StorageErrorCode.READ_FAILED,
+            error instanceof Error ? error : undefined,
+            { key, storeName: this.config.storeName },
+          ),
+        );
       }
-
-      const store = transaction.objectStore(this.config.storeName);
-      const request = store.get(key);
-
-      request.onerror = (): void => {
-        reject(new StorageError('Read failed', StorageErrorCode.READ_FAILED));
-      };
-
-      request.onsuccess = (): void => {
-        resolve(request.result as T | undefined);
-      };
     });
   }
 
@@ -113,26 +265,71 @@ export class IndexedDBStorage implements IStorageAdapter {
    */
   public async set<T>(key: string, value: T): Promise<void> {
     if (this.db === null) {
-      throw new StorageError('Database not initialized', StorageErrorCode.WRITE_FAILED);
+      throw new StorageError(
+        'Database not initialized',
+        StorageErrorCode.WRITE_FAILED,
+        undefined,
+        { key, storeName: this.config.storeName },
+      );
     }
 
     return new Promise((resolve, reject) => {
-      const transaction = this.db?.transaction(this.config.storeName, 'readwrite');
-      if (transaction === undefined) {
-        reject(new StorageError('Transaction failed', StorageErrorCode.WRITE_FAILED));
-        return;
+      try {
+        const transaction = this.db?.transaction(this.config.storeName, 'readwrite');
+        if (transaction === undefined) {
+          reject(
+            new StorageError(
+              `Failed to create transaction for key "${key}"`,
+              StorageErrorCode.TRANSACTION_FAILED,
+              undefined,
+              { key, storeName: this.config.storeName },
+            ),
+          );
+          return;
+        }
+
+        const store = transaction.objectStore(this.config.storeName);
+        const request = store.put(value, key);
+
+        request.onerror = (): void => {
+          const errorInfo = extractIndexedDBError(request.error);
+          reject(
+            new StorageError(
+              `Failed to write key "${key}": ${errorInfo.message}`,
+              errorInfo.code === StorageErrorCode.QUOTA_EXCEEDED
+                ? StorageErrorCode.QUOTA_EXCEEDED
+                : StorageErrorCode.WRITE_FAILED,
+              request.error ?? undefined,
+              { key, storeName: this.config.storeName },
+            ),
+          );
+        };
+
+        request.onsuccess = (): void => {
+          resolve();
+        };
+
+        transaction.onerror = (): void => {
+          const errorInfo = extractIndexedDBError(transaction.error);
+          reject(
+            new StorageError(
+              `Transaction failed while writing key "${key}": ${errorInfo.message}`,
+              StorageErrorCode.TRANSACTION_FAILED,
+              transaction.error ?? undefined,
+              { key, storeName: this.config.storeName },
+            ),
+          );
+        };
+      } catch (error) {
+        reject(
+          new StorageError(
+            `Unexpected error writing key "${key}": ${error instanceof Error ? error.message : 'Unknown'}`,
+            StorageErrorCode.WRITE_FAILED,
+            error instanceof Error ? error : undefined,
+            { key, storeName: this.config.storeName },
+          ),
+        );
       }
-
-      const store = transaction.objectStore(this.config.storeName);
-      const request = store.put(value, key);
-
-      request.onerror = (): void => {
-        reject(new StorageError('Write failed', StorageErrorCode.WRITE_FAILED));
-      };
-
-      request.onsuccess = (): void => {
-        resolve();
-      };
     });
   }
 
@@ -147,22 +344,53 @@ export class IndexedDBStorage implements IStorageAdapter {
     }
 
     return new Promise((resolve, reject) => {
-      const transaction = this.db?.transaction(this.config.storeName, 'readwrite');
-      if (transaction === undefined) {
-        resolve(false);
-        return;
+      try {
+        const transaction = this.db?.transaction(this.config.storeName, 'readwrite');
+        if (transaction === undefined) {
+          resolve(false);
+          return;
+        }
+
+        const store = transaction.objectStore(this.config.storeName);
+        const request = store.delete(key);
+
+        request.onerror = (): void => {
+          const errorInfo = extractIndexedDBError(request.error);
+          reject(
+            new StorageError(
+              `Failed to delete key "${key}": ${errorInfo.message}`,
+              StorageErrorCode.DELETE_FAILED,
+              request.error ?? undefined,
+              { key, storeName: this.config.storeName },
+            ),
+          );
+        };
+
+        request.onsuccess = (): void => {
+          resolve(true);
+        };
+
+        transaction.onerror = (): void => {
+          const errorInfo = extractIndexedDBError(transaction.error);
+          reject(
+            new StorageError(
+              `Transaction failed while deleting key "${key}": ${errorInfo.message}`,
+              StorageErrorCode.TRANSACTION_FAILED,
+              transaction.error ?? undefined,
+              { key, storeName: this.config.storeName },
+            ),
+          );
+        };
+      } catch (error) {
+        reject(
+          new StorageError(
+            `Unexpected error deleting key "${key}": ${error instanceof Error ? error.message : 'Unknown'}`,
+            StorageErrorCode.DELETE_FAILED,
+            error instanceof Error ? error : undefined,
+            { key, storeName: this.config.storeName },
+          ),
+        );
       }
-
-      const store = transaction.objectStore(this.config.storeName);
-      const request = store.delete(key);
-
-      request.onerror = (): void => {
-        reject(new StorageError('Delete failed', StorageErrorCode.DELETE_FAILED));
-      };
-
-      request.onsuccess = (): void => {
-        resolve(true);
-      };
     });
   }
 
@@ -175,22 +403,53 @@ export class IndexedDBStorage implements IStorageAdapter {
     }
 
     return new Promise((resolve, reject) => {
-      const transaction = this.db?.transaction(this.config.storeName, 'readwrite');
-      if (transaction === undefined) {
-        resolve();
-        return;
+      try {
+        const transaction = this.db?.transaction(this.config.storeName, 'readwrite');
+        if (transaction === undefined) {
+          resolve();
+          return;
+        }
+
+        const store = transaction.objectStore(this.config.storeName);
+        const request = store.clear();
+
+        request.onerror = (): void => {
+          const errorInfo = extractIndexedDBError(request.error);
+          reject(
+            new StorageError(
+              `Failed to clear storage: ${errorInfo.message}`,
+              StorageErrorCode.DELETE_FAILED,
+              request.error ?? undefined,
+              { storeName: this.config.storeName },
+            ),
+          );
+        };
+
+        request.onsuccess = (): void => {
+          resolve();
+        };
+
+        transaction.onerror = (): void => {
+          const errorInfo = extractIndexedDBError(transaction.error);
+          reject(
+            new StorageError(
+              `Transaction failed while clearing storage: ${errorInfo.message}`,
+              StorageErrorCode.TRANSACTION_FAILED,
+              transaction.error ?? undefined,
+              { storeName: this.config.storeName },
+            ),
+          );
+        };
+      } catch (error) {
+        reject(
+          new StorageError(
+            `Unexpected error clearing storage: ${error instanceof Error ? error.message : 'Unknown'}`,
+            StorageErrorCode.DELETE_FAILED,
+            error instanceof Error ? error : undefined,
+            { storeName: this.config.storeName },
+          ),
+        );
       }
-
-      const store = transaction.objectStore(this.config.storeName);
-      const request = store.clear();
-
-      request.onerror = (): void => {
-        reject(new StorageError('Clear failed', StorageErrorCode.DELETE_FAILED));
-      };
-
-      request.onsuccess = (): void => {
-        resolve();
-      };
     });
   }
 
@@ -204,22 +463,53 @@ export class IndexedDBStorage implements IStorageAdapter {
     }
 
     return new Promise((resolve, reject) => {
-      const transaction = this.db?.transaction(this.config.storeName, 'readonly');
-      if (transaction === undefined) {
-        resolve([]);
-        return;
+      try {
+        const transaction = this.db?.transaction(this.config.storeName, 'readonly');
+        if (transaction === undefined) {
+          resolve([]);
+          return;
+        }
+
+        const store = transaction.objectStore(this.config.storeName);
+        const request = store.getAllKeys();
+
+        request.onerror = (): void => {
+          const errorInfo = extractIndexedDBError(request.error);
+          reject(
+            new StorageError(
+              `Failed to retrieve keys: ${errorInfo.message}`,
+              StorageErrorCode.READ_FAILED,
+              request.error ?? undefined,
+              { storeName: this.config.storeName },
+            ),
+          );
+        };
+
+        request.onsuccess = (): void => {
+          resolve(request.result.map(String));
+        };
+
+        transaction.onerror = (): void => {
+          const errorInfo = extractIndexedDBError(transaction.error);
+          reject(
+            new StorageError(
+              `Transaction failed while retrieving keys: ${errorInfo.message}`,
+              StorageErrorCode.TRANSACTION_FAILED,
+              transaction.error ?? undefined,
+              { storeName: this.config.storeName },
+            ),
+          );
+        };
+      } catch (error) {
+        reject(
+          new StorageError(
+            `Unexpected error retrieving keys: ${error instanceof Error ? error.message : 'Unknown'}`,
+            StorageErrorCode.READ_FAILED,
+            error instanceof Error ? error : undefined,
+            { storeName: this.config.storeName },
+          ),
+        );
       }
-
-      const store = transaction.objectStore(this.config.storeName);
-      const request = store.getAllKeys();
-
-      request.onerror = (): void => {
-        reject(new StorageError('Keys read failed', StorageErrorCode.READ_FAILED));
-      };
-
-      request.onsuccess = (): void => {
-        resolve(request.result.map(String));
-      };
     });
   }
 
