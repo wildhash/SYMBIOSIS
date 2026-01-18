@@ -5,3 +5,4 @@
 
 export * from './executor';
 export * from './sandbox';
+export * from './validator';

@@ -66,8 +66,10 @@ Four specialized AI agents work together as first-class applications:
 ## Getting Started
 
 ### Prerequisites
-- Node.js 16+ and npm
-- Modern web browser (Chrome, Firefox, Safari, Edge)
+
+- Node.js 20+ 
+- pnpm 9.15+ (`npm install -g pnpm`)
+- Modern browser (Chrome 120+, Firefox 120+, Safari 17+, Edge 120+)
 
 ### Installation
 
@@ -77,16 +79,40 @@ git clone https://github.com/wildhash/SYMBIOSIS.git
 cd SYMBIOSIS
 
 # Install dependencies
-npm install
+pnpm install
 
-# Start development server
-npm run dev
+# Start all workspaces in dev mode
+pnpm dev
+
+# Or start specific workspace
+pnpm --filter @symbiosis/web dev
+
+# Run tests
+pnpm test
+
+# Type check
+pnpm typecheck
+
+# Lint
+pnpm lint
 
 # Build for production
-npm run build
+pnpm build
+```
 
-# Preview production build
-npm run preview
+### Environment Setup
+
+Create `.env.local` in project root:
+
+```env
+# Required for full functionality (optional for demo mode)
+ANTHROPIC_API_KEY=sk-ant-...
+OPENAI_API_KEY=sk-...
+GOOGLE_AI_API_KEY=...
+DEEPSEEK_API_KEY=...
+
+# Demo mode (no API keys needed)
+SYMBIOSIS_DEMO_MODE=true
 ```
 
 ### Usage
@@ -265,17 +291,17 @@ Configure which agent actions require approval:
 
 ### Running Tests
 ```bash
-npm test
+pnpm test
 ```
 
 ### Linting
 ```bash
-npm run lint
+pnpm lint
 ```
 
 ### Building
 ```bash
-npm run build
+pnpm build
 ```
 
 ## Contributing

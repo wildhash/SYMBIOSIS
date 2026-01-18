@@ -10,24 +10,13 @@ import type { EventBus } from '@symbiosis/kernel';
 import { BaseAgent } from '../base/agent';
 import type { Sandbox, ISandboxConfig } from './sandbox';
 import { createSandbox } from './sandbox';
-
-/**
- * Blocked patterns for code security validation
- * These patterns detect potentially dangerous code constructs
- */
-const BLOCKED_PATTERNS: readonly RegExp[] = [
-  /\beval\s*\(/g,
-  /\bFunction\s*\(/g,
-  /\brequire\s*\(/g,
-  /\bimport\s*\(/g,
-  /\bprocess\./g,
-  /\b__proto__\b/g,
-  /\bconstructor\s*\[/g,
-  /\bchild_process\b/g,
-  /\bfs\./g,
-  /\bexec\s*\(/g,
-  /\bspawn\s*\(/g,
-];
+import {
+  validateCode,
+  isSupportedLanguage,
+  SUPPORTED_LANGUAGES,
+  type SupportedLanguage,
+  type IValidationResult,
+} from './validator';
 
 /**
  * Maximum allowed code length to prevent DoS
@@ -35,7 +24,7 @@ const BLOCKED_PATTERNS: readonly RegExp[] = [
 const MAX_CODE_LENGTH = 100_000;
 
 /**
- * Result of code validation
+ * Result of code validation (legacy interface for backward compatibility)
  */
 export interface ICodeValidationResult {
   readonly isValid: boolean;
@@ -46,12 +35,12 @@ export interface ICodeValidationResult {
 
 /**
  * Validate and sanitize code input
+ * This function performs basic input validation before AST-based validation
  * @param code - The code to validate
  * @returns Validation result with sanitized code
  */
 export function validateAndSanitizeCode(code: unknown): ICodeValidationResult {
   const errors: string[] = [];
-  const blockedPatterns: string[] = [];
 
   // Type validation
   if (code === null || code === undefined) {
@@ -93,23 +82,43 @@ export function validateAndSanitizeCode(code: unknown): ICodeValidationResult {
     };
   }
 
-  // Pattern detection and sanitization
-  let sanitizedCode = trimmedCode;
-  for (const pattern of BLOCKED_PATTERNS) {
-    // Reset lastIndex for global regex
-    pattern.lastIndex = 0;
-    const matches = trimmedCode.match(pattern);
-    if (matches !== null) {
-      blockedPatterns.push(...matches);
-      sanitizedCode = sanitizedCode.replace(pattern, '/* BLOCKED: $& */');
-    }
+  return {
+    isValid: errors.length === 0,
+    sanitizedCode: trimmedCode,
+    blockedPatterns: [],
+    errors,
+  };
+}
+
+/**
+ * Validate language parameter
+ * @param language - The language to validate
+ * @returns Validation result with language or error
+ */
+export function validateLanguage(
+  language: unknown,
+): { isValid: true; language: SupportedLanguage } | { isValid: false; error: string } {
+  const languageInput = language ?? 'javascript';
+
+  if (!isSupportedLanguage(languageInput)) {
+    return {
+      isValid: false,
+      error: `Unsupported language: "${String(languageInput)}". Supported: ${SUPPORTED_LANGUAGES.join(', ')}`,
+    };
   }
 
+  return { isValid: true, language: languageInput };
+}
+
+/**
+ * Convert AST validation result to legacy format
+ */
+function convertValidationResult(result: IValidationResult): ICodeValidationResult {
   return {
-    isValid: blockedPatterns.length === 0 && errors.length === 0,
-    sanitizedCode,
-    blockedPatterns,
-    errors,
+    isValid: result.isValid,
+    sanitizedCode: result.sanitizedCode ?? '',
+    blockedPatterns: result.violations.map((v) => v.message),
+    errors: result.violations.filter((v) => v.severity === 'error').map((v) => v.message),
   };
 }
 
@@ -181,19 +190,31 @@ export class ExecutorAgent extends BaseAgent {
 
     this.logger.info(`Executor processing task: ${task.description}`);
 
-    const input = task.input as { code?: unknown; language?: string } | undefined;
+    const input = task.input as { code?: unknown; language?: unknown } | undefined;
 
-    // Validate and sanitize code input
-    const validation = validateAndSanitizeCode(input?.code);
+    // Validate language first
+    const languageResult = validateLanguage(input?.language);
+    if (!languageResult.isValid) {
+      this.logger.warn(`Language validation failed: ${languageResult.error}`);
+      return {
+        taskId: task.id,
+        agentId: this.config.id,
+        success: false,
+        output: null,
+        error: languageResult.error,
+        executionTimeMs: Date.now() - startTime,
+        tokensUsed: 0,
+        completedAt: new Date(),
+      };
+    }
 
-    if (!validation.isValid) {
-      const errorMessage =
-        validation.errors.length > 0
-          ? `Invalid code input: ${validation.errors.join(', ')}`
-          : `Blocked dangerous patterns detected: ${validation.blockedPatterns.join(', ')}`;
+    const language = languageResult.language;
 
+    // Validate basic code input (type, length, etc.)
+    const basicValidation = validateAndSanitizeCode(input?.code);
+    if (!basicValidation.isValid) {
+      const errorMessage = `Invalid code input: ${basicValidation.errors.join(', ')}`;
       this.logger.warn(`Code validation failed: ${errorMessage}`);
-
       return {
         taskId: task.id,
         agentId: this.config.id,
@@ -206,15 +227,32 @@ export class ExecutorAgent extends BaseAgent {
       };
     }
 
-    // Log blocked patterns if any were found (code was sanitized)
-    if (validation.blockedPatterns.length > 0) {
-      this.logger.warn(
-        `Blocked dangerous patterns in code: ${validation.blockedPatterns.join(', ')}`,
-      );
+    // Perform AST-based security validation
+    const securityValidation = validateCode(basicValidation.sanitizedCode, language);
+    const validation = convertValidationResult(securityValidation);
+
+    if (!validation.isValid) {
+      const errorMessage = `Code security validation failed: ${validation.blockedPatterns.join('; ')}`;
+      this.logger.warn(`Security validation failed: ${errorMessage}`);
+      return {
+        taskId: task.id,
+        agentId: this.config.id,
+        success: false,
+        output: null,
+        error: errorMessage,
+        executionTimeMs: Date.now() - startTime,
+        tokensUsed: 0,
+        completedAt: new Date(),
+      };
+    }
+
+    // Log warnings if any were found
+    const warnings = securityValidation.violations.filter((v) => v.severity === 'warning');
+    if (warnings.length > 0) {
+      this.logger.warn(`Code validation warnings: ${warnings.map((w) => w.message).join(', ')}`);
     }
 
     const code = validation.sanitizedCode;
-    const language = (input?.language ?? 'javascript') as 'javascript' | 'typescript' | 'shell';
 
     const result = await this.sandbox.execute(code, language);
 
