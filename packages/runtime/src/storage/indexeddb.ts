@@ -32,14 +32,21 @@ export enum StorageErrorCode {
  * Storage error with enhanced context
  */
 export class StorageError extends Error {
+  public readonly code: StorageErrorCode;
+  public readonly originalError: Error | undefined;
+  public readonly context: Record<string, unknown> | undefined;
+
   constructor(
     message: string,
-    public readonly code: StorageErrorCode,
-    public readonly cause?: Error,
-    public readonly context?: Record<string, unknown>,
+    code: StorageErrorCode,
+    originalError?: Error,
+    context?: Record<string, unknown>,
   ) {
-    super(message);
+    super(message, { cause: originalError });
     this.name = 'StorageError';
+    this.code = code;
+    this.originalError = originalError;
+    this.context = context;
 
     // Capture stack trace
     if (Error.captureStackTrace !== undefined) {
@@ -55,7 +62,7 @@ export class StorageError extends Error {
       name: this.name,
       message: this.message,
       code: this.code,
-      cause: this.cause?.message,
+      originalError: this.originalError?.message,
       context: this.context,
       stack: this.stack,
     };
