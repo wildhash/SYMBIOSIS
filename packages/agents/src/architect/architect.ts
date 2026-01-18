@@ -30,14 +30,29 @@ export const ARCHITECT_CONFIG: IAgentConfig = {
 };
 
 /**
+ * Extended configuration options for ArchitectAgent
+ */
+export interface IArchitectOptions {
+  /** Optional simulation delay in milliseconds (defaults to 0 in production) */
+  readonly simulationDelayMs?: number;
+}
+
+/**
  * Architect agent for system design tasks
  */
 export class ArchitectAgent extends BaseAgent {
   private systemPrompt: string;
+  private readonly simulationDelayMs: number;
 
-  constructor(logger: ILogger, eventBus: EventBus, config?: Partial<IAgentConfig>) {
+  constructor(
+    logger: ILogger,
+    eventBus: EventBus,
+    config?: Partial<IAgentConfig>,
+    options?: IArchitectOptions,
+  ) {
     super({ ...ARCHITECT_CONFIG, ...config }, logger, eventBus);
     this.systemPrompt = ARCHITECT_SYSTEM_PROMPT;
+    this.simulationDelayMs = options?.simulationDelayMs ?? 0;
   }
 
   /**
@@ -106,8 +121,10 @@ export class ArchitectAgent extends BaseAgent {
    * @returns Architecture response
    */
   private async generateArchitectureResponse(task: IAgentTask): Promise<unknown> {
-    // Simulate processing time
-    await new Promise((resolve) => setTimeout(resolve, 100));
+    // Only delay in simulation/dev mode when explicitly configured
+    if (this.simulationDelayMs > 0) {
+      await new Promise((resolve) => setTimeout(resolve, this.simulationDelayMs));
+    }
 
     // In production, this would be an actual LLM call
     return {
@@ -146,12 +163,14 @@ export class ArchitectAgent extends BaseAgent {
  * @param logger - Logger instance
  * @param eventBus - Event bus instance
  * @param config - Optional config overrides
+ * @param options - Optional architect-specific options
  * @returns Configured architect agent
  */
 export function createArchitectAgent(
   logger: ILogger,
   eventBus: EventBus,
   config?: Partial<IAgentConfig>,
+  options?: IArchitectOptions,
 ): ArchitectAgent {
-  return new ArchitectAgent(logger, eventBus, config);
+  return new ArchitectAgent(logger, eventBus, config, options);
 }
