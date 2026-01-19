@@ -407,7 +407,13 @@ export class ResourceMonitor {
    * Get current memory usage in MB (browser environment)
    */
   private getMemoryUsage(): number {
-    // Check for browser Performance API with memory extension
+    // Node.js environment
+    if (typeof process !== 'undefined' && process.memoryUsage) {
+      const memory = process.memoryUsage();
+      return Math.round(memory.heapUsed / 1024 / 1024);
+    }
+    
+    // Browser environment
     if (typeof performance !== 'undefined' && 'memory' in performance) {
       const memory = performance as Performance & {
         memory?: { usedJSHeapSize: number };
@@ -416,6 +422,7 @@ export class ResourceMonitor {
         return Math.round(memory.memory.usedJSHeapSize / 1024 / 1024);
       }
     }
+    
     return 0;
   }
 }
