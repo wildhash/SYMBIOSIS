@@ -412,7 +412,7 @@ export function validateShellCommand(command: string): IValidationResult {
   return {
     isValid: violations.length === 0,
     violations,
-    sanitizedCode: violations.length === 0 ? command : null,
+    sanitizedCode: null, // Shell commands should not be returned as sanitized code
   };
 }
 

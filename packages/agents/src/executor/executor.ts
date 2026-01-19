@@ -99,7 +99,14 @@ export function validateLanguage(
   language: unknown,
 ): { isValid: true; language: SupportedLanguage } | { isValid: false; error: string } {
   const languageInput = language ?? 'javascript';
-
+  
+  if (typeof languageInput !== 'string') {
+    return {
+      isValid: false,
+      error: `Language must be a string, got ${typeof languageInput}`,
+    };
+  }
+  
   if (!isSupportedLanguage(languageInput)) {
     return {
       isValid: false,
