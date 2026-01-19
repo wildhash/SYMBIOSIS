@@ -45,3 +45,7 @@ logs/
 tmp/
 temp/
 *.tmp
+
+# Package manager
+package-lock.json
+yarn.lock

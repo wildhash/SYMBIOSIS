@@ -114,6 +114,12 @@ importers:
 
   packages/agents:
     dependencies:
+      '@babel/parser':
+        specifier: ^7.24.0
+        version: 7.28.6
+      '@babel/traverse':
+        specifier: ^7.24.0
+        version: 7.28.6
       '@symbiosis/kernel':
         specifier: workspace:*
         version: link:../kernel
@@ -124,6 +130,12 @@ importers:
         specifier: ^7.8.1
         version: 7.8.2
     devDependencies:
+      '@babel/types':
+        specifier: ^7.24.0
+        version: 7.28.6
+      '@types/babel__traverse':
+        specifier: ^7.20.0
+        version: 7.28.0
       '@types/node':
         specifier: ^22.10.0
         version: 22.19.7
